@@ -1,0 +1,19 @@
+version: '3.4'
+services:
+   database:
+      image: "postgres" # use latest official postgres version
+      container_name: ${DB_NAME}
+      ports:
+         - "5432:5432"
+      environment:
+         POSTGRES_USER: ${DB_USER} 
+         POSTGRES_PASSWORD: ${DB_PASSWORD}
+         POSTGRES_DB: ${DB_NAME}        
+      volumes:
+         - data:/var/lib/postgresql/data/ # persist data even if container shuts down
+         - postgres.conf:/usr/local/etc/postgres/postgres.conf 
+      restart: always
+      network_mode: bridge
+volumes:
+    data:
+    postgres.conf:
