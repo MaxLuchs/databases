@@ -4,6 +4,30 @@ version = "0.1.0"
 authors = ["maxluchs"]
 edition = "2018"
 
+[[bin]]
+name = "cmdline"
+path = "src/main.rs"
+
+[[bin]]
+name = "gui"
+path = "src/gui.rs"
+
+[[bin]]
+name = "gui2"
+path = "src/gui2.rs"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "test"
+path = "src/test.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cursive = "0.16"
+terminal-menu = "1.9.7"
+
+
