@@ -43,6 +43,7 @@ pub fn create_db(root: &Path, name: String, db: DB) -> Result<(), String> {
                 .map_err(|_| "Could not copy postgres setup files".to_string())
         }
     }
+    // TODO modify envs
 }
 
 pub fn start_docker_compose(path: &Path) -> Result<(), String> {

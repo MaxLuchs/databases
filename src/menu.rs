@@ -6,6 +6,7 @@ use self::terminal_menu::{
 use crate::db::{get_existing_dbs, DB};
 use crate::menu::UISelection::{CreateDB, StartDB};
 use crate::utils::get_root;
+use std::io::stdin;
 
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum UISelection {
@@ -78,4 +79,12 @@ pub fn show_menu() -> Result<Option<UISelection>, String> {
     .into();
 
     return Ok(ui_selection);
+}
+
+pub fn get_user_input(message: String) -> String {
+    print!("{}", message.to_string());
+    let input = stdin();
+    let mut user_input = String::new();
+    input.read_line(&mut user_input);
+    return user_input.trim().to_string();
 }
