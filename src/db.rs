@@ -105,3 +105,29 @@ pub fn delete_container(db_name: String) -> Result<(), String> {
         .map_err(|_| "Could not delete container")?;
     Ok(())
 }
+
+pub fn stop_db(db_name: String) -> Result<(), String> {
+    println!("Stopping DB : {}", db_name);
+    Command::new("docker")
+        .args(vec!["stop", &db_name])
+        .spawn()
+        .map_err(|_| "Could not stop DB".to_string())?;
+    Command::new("docker")
+        .args(vec!["rm", &db_name])
+        .spawn()
+        .map_err(|_| "Could not stop DB".to_string())?;
+    Ok(())
+}
+
+pub fn get_running_dbs(root: &Path) -> Result<Vec<String>, String> {
+    let db_names = get_existing_dbs(root);
+    let output = Command::new("docker")
+        .arg("ps")
+        .output()
+        .map_err(|_| "Could not check DBs".to_string())?;
+    let result = String::from_utf8_lossy(&output.stdout);
+    return Ok(db_names
+        .into_iter()
+        .filter(|name| result.lines().any(|line| line.ends_with(name)))
+        .collect::<Vec<String>>());
+}

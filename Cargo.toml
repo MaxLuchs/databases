@@ -14,5 +14,6 @@ path = "src/main.rs"
 cursive = "0.16"
 terminal-menu = "1.9.7"
 rustyline = "7.1.0"
+regex = "1.4.3"
 
 
