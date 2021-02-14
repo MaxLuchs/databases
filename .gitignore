@@ -3,5 +3,6 @@
 !**/data/.gitkeep
 .history
 existing_dbs/*
+!existing_dbs/.gitkeep
 .idea
 .db-history
