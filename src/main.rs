@@ -17,7 +17,6 @@ pub fn main() {
         match result {
             UISelection::CreateDB { db_type } => {
                 let mut editor = Editor::<()>::new();
-                editor.load_history(".db-history");
 
                 // db name:
                 let db_input = editor.readline("New DB-Name > ").unwrap();
