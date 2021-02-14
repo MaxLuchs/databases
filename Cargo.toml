@@ -5,7 +5,7 @@ authors = ["maxluchs"]
 edition = "2018"
 
 [[bin]]
-name = "main"
+name = "db"
 path = "src/main.rs"
 
 

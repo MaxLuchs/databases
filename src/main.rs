@@ -5,7 +5,6 @@ use databases::db::{
 use databases::menu::{show_menu, UISelection};
 use eyre::*;
 use rustyline::Editor;
-use std::env::current_dir;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -21,17 +20,13 @@ pub fn main() -> Result<()> {
     let args: CommandLineArgs = CommandLineArgs::from_args();
     let root = args
         .dir
-        .or(current_dir().ok())
         .and_then(|db_dir| if db_dir.exists() { Some(db_dir) } else { None })
         .ok_or(eyre!("No valid DB directory given"))?;
     println!("Using project dir for DBs: {}", root.display());
-    let user_input = show_menu();
-    if let Err(msg) = user_input {
-        println!("{}", msg);
-        return Ok(());
-    }
+    let user_input = show_menu()?;
+
     //println!("user input : {:?}", &user_input);
-    if let Ok(Some(result)) = user_input {
+    if let Some(result) = user_input {
         match result {
             UISelection::CreateDB { db_type } => {
                 let mut editor = Editor::<()>::new();
@@ -41,9 +36,11 @@ pub fn main() -> Result<()> {
                 let new_db_name = db_input.trim().to_string();
                 create_db(&root, new_db_name.clone(), db_type).unwrap();
 
-                let port_input = editor.readline("DB-Port (optional) > ").unwrap();
+                let default_port = get_default_port(db_type);
+                let message = format!("DB-Port (optional, default: {}) > ", &default_port);
+                let port_input = editor.readline(&message).unwrap();
                 let new_port = if port_input.trim().is_empty() {
-                    get_default_port(db_type)
+                    default_port
                 } else {
                     port_input.trim().to_string()
                 };

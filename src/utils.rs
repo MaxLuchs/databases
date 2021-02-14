@@ -3,10 +3,11 @@ use std::env::current_dir;
 use std::fs::read_dir;
 use std::path::Path;
 
-pub fn list_all_folders(path: &Path) -> Vec<Box<Path>> {
-    let dirs = read_dir(path).unwrap();
-    dirs.map(|dir| dir.unwrap().path().into_boxed_path())
-        .collect()
+pub fn list_all_folders(path: &Path) -> Result<Vec<Box<Path>>> {
+    let dirs = read_dir(path)?;
+    Ok(dirs
+        .map(|dir| dir.unwrap().path().into_boxed_path())
+        .collect())
 }
 
 pub fn get_root() -> Box<Path> {

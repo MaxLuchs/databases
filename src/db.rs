@@ -12,18 +12,20 @@ pub enum DB {
     POSTGRES,
 }
 
-pub fn get_existing_dbs(root: &Path) -> Vec<String> {
-    let folders = list_all_folders(&root.join("existing_dbs").into_boxed_path());
-    folders
+pub fn get_existing_dbs(root: &Path) -> Result<Vec<String>> {
+    let folders = list_all_folders(&root.join("existing_dbs").into_boxed_path())?;
+    let results = folders
         .iter()
         .filter(|p| p.is_dir())
         .map(|p| {
             p.file_name()
                 .and_then(|name| name.to_str())
                 .map(|name| name.to_owned())
-                .unwrap()
         })
-        .collect()
+        .filter(|p| p.is_some())
+        .map(|p| p.unwrap())
+        .collect::<Vec<String>>();
+    Ok(results)
 }
 
 pub fn create_env_file(
@@ -115,7 +117,7 @@ pub fn stop_db(db_name: String) -> Result<()> {
 }
 
 pub fn get_running_dbs(root: &Path) -> Result<Vec<String>> {
-    let db_names = get_existing_dbs(root);
+    let db_names = get_existing_dbs(root)?;
     let output = Command::new("docker").arg("ps").output()?;
     let result = String::from_utf8_lossy(&output.stdout);
     return Ok(db_names

@@ -66,7 +66,7 @@ pub fn show_menu() -> Result<Option<UISelection>> {
             "Start existing DB",
             vec![
                 scroll("Select DB", {
-                    let mut options = get_existing_dbs(&root);
+                    let mut options = get_existing_dbs(&root)?;
                     options.insert(0, "none".to_string());
                     options
                 }),
@@ -88,7 +88,7 @@ pub fn show_menu() -> Result<Option<UISelection>> {
             "Delete a DB",
             vec![
                 scroll("Select DB", {
-                    let mut options = get_existing_dbs(&root);
+                    let mut options = get_existing_dbs(&root)?;
                     options.insert(0, "none".to_string());
                     options
                 }),
