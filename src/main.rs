@@ -23,7 +23,7 @@ pub fn main() -> Result<()> {
         .and_then(|db_dir| if db_dir.exists() { Some(db_dir) } else { None })
         .ok_or(eyre!("No valid DB directory given"))?;
     println!("Using project dir for DBs: {}", root.display());
-    let user_input = show_menu()?;
+    let user_input = show_menu(&root)?;
 
     //println!("user input : {:?}", &user_input);
     if let Some(result) = user_input {

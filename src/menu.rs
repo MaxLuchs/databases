@@ -5,9 +5,9 @@ use self::terminal_menu::{
 };
 use crate::db::{get_existing_dbs, get_running_dbs, DB};
 use crate::menu::UISelection::{CreateDB, DeleteDB, StartDB, StopDB};
-use crate::utils::get_root;
 use eyre::Result;
 use std::io::stdin;
+use std::path::Path;
 
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum UISelection {
@@ -59,8 +59,7 @@ impl From<UISelectionInput> for Option<UISelection> {
     }
 }
 
-pub fn show_menu() -> Result<Option<UISelection>> {
-    let root = get_root();
+pub fn show_menu(root: &Path) -> Result<Option<UISelection>> {
     let menu = menu(vec![
         submenu(
             "Start existing DB",
