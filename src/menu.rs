@@ -131,6 +131,6 @@ pub fn get_user_input(message: String) -> String {
     print!("{}", message.to_string());
     let input = stdin();
     let mut user_input = String::new();
-    input.read_line(&mut user_input);
+    input.read_line(&mut user_input).unwrap();
     return user_input.trim().to_string();
 }

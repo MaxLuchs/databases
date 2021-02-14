@@ -2,7 +2,7 @@ use crate::utils::{copy_dir_all, list_all_folders};
 use std::env::set_current_dir;
 use std::error::Error;
 use std::fs::{create_dir, remove_dir_all, remove_file, File};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::Command;
 
@@ -35,7 +35,7 @@ pub fn create_env_file(
 ) -> Result<(), Box<dyn Error>> {
     let env_file_path = root.join("existing_dbs").join(db_name.clone()).join(".env");
     // Delete env-file:
-    remove_file(&env_file_path);
+    remove_file(&env_file_path)?;
 
     let mut file = File::create(env_file_path).map_err(|_| "Could not create .env file")?;
     let env_content = format!(
@@ -43,7 +43,7 @@ pub fn create_env_file(
         db_name, db_username, db_password, port
     );
     println!("Env-file : {}", env_content);
-    file.write_all(env_content.as_bytes());
+    file.write_all(env_content.as_bytes())?;
     Ok(())
 }
 
@@ -93,7 +93,7 @@ pub fn get_default_port(db: DB) -> String {
 }
 
 pub fn delete_db(root: &Path, db_name: String) -> Result<(), String> {
-    delete_container(db_name.clone());
+    delete_container(db_name.clone())?;
     remove_dir_all(root.join("existing_dbs").join(db_name))
         .map_err(|_| "Could not delete DB".to_string())
 }
