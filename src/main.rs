@@ -1,6 +1,6 @@
 use databases::db::{
     create_db, create_env_file, delete_container, delete_db, get_default_port,
-    start_docker_compose, stop_db, DB,
+    start_docker_compose, stop_db,
 };
 use databases::menu::{get_user_input, show_menu, UISelection};
 use rustyline::Editor;
@@ -60,10 +60,10 @@ pub fn main() {
                 start_docker_compose(&root.join("existing_dbs").join(&db_name));
             }
             UISelection::DeleteDB { db_name } => {
-                delete_db(&root, db_name).map(|| println!(format!("DB {} deleted!", db_name)));
+                delete_db(&root, db_name.clone()).map(|_| println!("DB {} deleted!", &db_name));
             }
             UISelection::StopDB { db_name } => {
-                stop_db(db_name).map(|| println!(format!("DB {} stopped!", db_name)));
+                stop_db(db_name.clone()).map(|_| println!("DB {} stopped!", &db_name));
             }
         }
     }
