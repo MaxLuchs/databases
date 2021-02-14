@@ -1,3 +1,4 @@
+use eyre::Result;
 use std::env::current_dir;
 use std::fs::read_dir;
 use std::path::Path;
@@ -13,9 +14,8 @@ pub fn get_root() -> Box<Path> {
 }
 
 use std::fs;
-use std::io;
 
-pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<()> {
     fs::create_dir_all(&dst)?;
     for entry in fs::read_dir(src)? {
         let entry = entry?;

@@ -6,6 +6,7 @@ use self::terminal_menu::{
 use crate::db::{get_existing_dbs, get_running_dbs, DB};
 use crate::menu::UISelection::{CreateDB, DeleteDB, StartDB, StopDB};
 use crate::utils::get_root;
+use eyre::Result;
 use std::io::stdin;
 
 #[derive(Debug, PartialOrd, PartialEq)]
@@ -16,6 +17,7 @@ pub enum UISelection {
     StopDB { db_name: String },
 }
 
+#[derive(Debug)]
 struct UISelectionInput {
     db_existing: String,
     db_new: String,
@@ -25,6 +27,7 @@ struct UISelectionInput {
 
 impl From<UISelectionInput> for Option<UISelection> {
     fn from(input: UISelectionInput) -> Option<UISelection> {
+        //println!("input : {:?}", &input);
         let UISelectionInput {
             db_existing,
             db_new,
@@ -41,14 +44,14 @@ impl From<UISelectionInput> for Option<UISelection> {
             ("none", "postgres", "none", "none") => Some(CreateDB {
                 db_type: DB::POSTGRES,
             }),
-            (db_name, "none", "none", "none") if !db_name.eq("none") => Some(StartDB {
+            (db_name, "none", "none", "none") if db_name != "none" => Some(StartDB {
                 db_name: db_name.to_string(),
             }),
-            ("none", "none", db_name, "none") => Some(DeleteDB {
+            ("none", "none", db_name, "none") if db_name != "none" => Some(DeleteDB {
                 db_name: db_name.to_string(),
             }),
 
-            ("none", "none", "none", db_name) => Some(StopDB {
+            ("none", "none", "none", db_name) if db_name != "none" => Some(StopDB {
                 db_name: db_name.to_string(),
             }),
             _ => None,
@@ -56,7 +59,7 @@ impl From<UISelectionInput> for Option<UISelection> {
     }
 }
 
-pub fn show_menu() -> Result<Option<UISelection>, String> {
+pub fn show_menu() -> Result<Option<UISelection>> {
     let root = get_root();
     let menu = menu(vec![
         submenu(
@@ -108,14 +111,18 @@ pub fn show_menu() -> Result<Option<UISelection>, String> {
     activate(&menu);
     wait_for_exit(&menu);
 
+    // menus:
     let existing_menu = get_submenu(&menu, "Start existing DB");
     let new_menu = get_submenu(&menu, "Create new DB");
+    let delete_menu = get_submenu(&menu, "Delete a DB");
+    let stop_menu = get_submenu(&menu, "Stop a running DB");
+
+    // values:
     let db_existing = selection_value(&existing_menu, "Select DB");
     let db_new = selection_value(&new_menu, "Select DB-Type");
-    let delete_menu = get_submenu(&menu, "Delete a DB");
     let db_delete = selection_value(&delete_menu, "Select DB");
-    let stop_menu = get_submenu(&menu, "Stop a running DB");
     let db_stop = selection_value(&stop_menu, "Select DB");
+
     let ui_selection: Option<UISelection> = (UISelectionInput {
         db_new,
         db_existing,

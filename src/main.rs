@@ -3,18 +3,19 @@ use databases::db::{
     start_docker_compose, stop_db,
 };
 use databases::menu::{show_menu, UISelection};
+use eyre::*;
 use rustyline::Editor;
 use std::env::current_dir;
-use std::error::Error;
 
-pub fn main() -> Result<(), Box<dyn Error>> {
+pub fn main() -> Result<()> {
     let root = current_dir().unwrap();
-    let user_input = show_menu().and_then(|result| result.ok_or("Nothing selected".to_string()));
+    let user_input = show_menu();
     if let Err(msg) = user_input {
         println!("{}", msg);
         return Ok(());
     }
-    if let Ok(result) = user_input {
+    //println!("user input : {:?}", &user_input);
+    if let Ok(Some(result)) = user_input {
         match result {
             UISelection::CreateDB { db_type } => {
                 let mut editor = Editor::<()>::new();
@@ -66,6 +67,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
                 stop_db(db_name.clone()).map(|_| println!("DB {} stopped!", &db_name))?;
             }
         }
+    } else {
+        println!("User borted selection");
     };
     Ok(())
 }
