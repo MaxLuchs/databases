@@ -6,9 +6,25 @@ use databases::menu::{show_menu, UISelection};
 use eyre::*;
 use rustyline::Editor;
 use std::env::current_dir;
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "db")]
+struct CommandLineArgs {
+    /// path to local clone of git-repository: https://github.com/MaxLuchs/databases
+    #[structopt(short, long, env = "DB_DIR")]
+    dir: Option<PathBuf>,
+}
 
 pub fn main() -> Result<()> {
-    let root = current_dir().unwrap();
+    let args: CommandLineArgs = CommandLineArgs::from_args();
+    let root = args
+        .dir
+        .or(current_dir().ok())
+        .and_then(|db_dir| if db_dir.exists() { Some(db_dir) } else { None })
+        .ok_or(eyre!("No valid DB directory given"))?;
+    println!("Using project dir for DBs: {}", root.display());
     let user_input = show_menu();
     if let Err(msg) = user_input {
         println!("{}", msg);
@@ -68,7 +84,7 @@ pub fn main() -> Result<()> {
             }
         }
     } else {
-        println!("User borted selection");
+        println!("User aborted selection");
     };
     Ok(())
 }
