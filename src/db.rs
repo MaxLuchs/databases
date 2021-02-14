@@ -52,6 +52,10 @@ pub fn create_db(root: &Path, name: String, db: DB) -> Result<(), String> {
     if target_path.exists() {
         return Err("DB already exists".to_string());
     }
+    if !root.join("existing_dbs").exists() {
+        create_dir(root.join("existing_dbs"))
+            .map_err(|_| "Could not create db folder".to_string())?
+    }
     let src_path = match db {
         DB::MONGO => root.join("mongo"),
         DB::POSTGRES => root.join("postgres"),
