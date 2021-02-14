@@ -3,7 +3,6 @@ use std::fs::read_dir;
 use std::path::Path;
 
 pub fn list_all_folders(path: &Path) -> Result<Vec<Box<Path>>> {
-    println!("list_all_folders : {:?}", path);
     let dirs = read_dir(path)?;
     Ok(dirs
         .map(|dir| dir.unwrap().path().into_boxed_path())
