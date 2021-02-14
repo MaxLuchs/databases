@@ -2,15 +2,15 @@ version: '3'
 services:
    database:
       image: mongo:latest
+      container_name: ${DB_NAME}
       volumes:
          - data:/data/db
          - config:/data/configdb
-           #environment:
-              #MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
-              #MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}           
+      environment:
+         MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+         MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
       ports:
-         - "27017:27017"  
-      restart: always     
+         - ${DB_PORT}:27017
 volumes:
    data:
    config:

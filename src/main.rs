@@ -1,5 +1,9 @@
-use databases::db::{create_db, start_docker_compose};
+use databases::db::{
+    create_db, create_env_file, delete_container, delete_db, get_default_port,
+    start_docker_compose, DB,
+};
 use databases::menu::{get_user_input, show_menu, UISelection};
+use rustyline::Editor;
 use std::env::current_dir;
 
 pub fn main() {
@@ -12,12 +16,36 @@ pub fn main() {
     if let Ok(result) = user_input {
         match result {
             UISelection::CreateDB { db_type } => {
-                let new_db_name = get_user_input("New DB-Name: ".to_string());
-                create_db(&root.join("existing_dbs"), new_db_name.to_string(), db_type).unwrap();
-                start_docker_compose(&root.join(new_db_name));
+                let mut editor = Editor::<()>::new();
+                editor.load_history(".db-history");
+
+                // db name:
+                let db_input = editor.readline("New DB-Name > ").unwrap();
+                let new_db_name = db_input.trim().to_string();
+                create_db(&root, new_db_name.clone(), db_type).unwrap();
+
+                let port_input = editor.readline("DB-Port (optional) > ").unwrap();
+                let new_port = if port_input.trim().is_empty() {
+                    get_default_port(db_type)
+                } else {
+                    port_input.trim().to_string()
+                };
+
+                let user_input = editor.readline("User (optional) > ").unwrap();
+                let new_user = user_input.trim().to_string();
+
+                let password_input = editor.readline("Password (optional) > ").unwrap();
+                let new_password = password_input.trim().to_string();
+
+                create_env_file(&root, new_user, new_password, new_db_name.clone(), new_port);
+                delete_container(new_db_name.clone());
+                start_docker_compose(&root.join("existing_dbs").join(&new_db_name));
             }
             UISelection::StartDB { db_name } => {
-                start_docker_compose(&root.join(&db_name));
+                start_docker_compose(&root.join("existing_dbs").join(&db_name));
+            }
+            UISelection::DeleteDB { db_name } => {
+                delete_db(&root, db_name);
             }
         }
     }

@@ -1,11 +1,12 @@
 use crate::utils::{copy_dir_all, list_all_folders};
 use std::env::set_current_dir;
-use std::fs::create_dir;
-use std::io::{BufRead, BufReader};
+use std::error::Error;
+use std::fs::{create_dir, remove_dir_all, remove_file, File};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
 use std::process::Command;
 
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Copy, Clone)]
 pub enum DB {
     MONGO,
     POSTGRES,
@@ -25,28 +26,46 @@ pub fn get_existing_dbs(root: &Path) -> Vec<String> {
         .collect()
 }
 
+pub fn create_env_file(
+    root: &Path,
+    db_username: String,
+    db_password: String,
+    db_name: String,
+    port: String,
+) -> Result<(), Box<dyn Error>> {
+    let env_file_path = root.join("existing_dbs").join(db_name.clone()).join(".env");
+    // Delete env-file:
+    remove_file(&env_file_path);
+
+    let mut file = File::create(env_file_path).map_err(|_| "Could not create .env file")?;
+    let env_content = format!(
+        "DB_NAME = {}\nDB_USER = {}\nDB_PASSWORD = {}\nDB_PORT = {}",
+        db_name, db_username, db_password, port
+    );
+    println!("Env-file : {}", env_content);
+    file.write_all(env_content.as_bytes());
+    Ok(())
+}
+
 pub fn create_db(root: &Path, name: String, db: DB) -> Result<(), String> {
-    let target_path = root.join(name);
+    let target_path = root.join("existing_dbs").join(name);
     if target_path.exists() {
         return Err("DB already exists".to_string());
     }
-    create_dir(&target_path).map_err(|_| "Could not create folder".to_string())?;
-    match db {
-        DB::MONGO => {
-            let src = root.join("mongo");
-            copy_dir_all(src, &target_path)
-                .map_err(|_| "Could not copy mongodb setup files".to_string())
-        }
-        DB::POSTGRES => {
-            let src = root.join("postgres");
-            copy_dir_all(src, &target_path)
-                .map_err(|_| "Could not copy postgres setup files".to_string())
-        }
-    }
-    // TODO modify envs
+    let src_path = match db {
+        DB::MONGO => root.join("mongo"),
+        DB::POSTGRES => root.join("postgres"),
+    };
+    println!(
+        "Initialising new db folder {:?} by db sample folder {:?}",
+        target_path, src_path
+    );
+    copy_dir_all(src_path, &target_path)
+        .map_err(|err| format!("Could not copy mongodb setup files: {}", err))
 }
 
 pub fn start_docker_compose(path: &Path) -> Result<(), String> {
+    println!("start docker-compose : {:?}", path);
     set_current_dir(path).map_err(|_| "DB-folder does not exist".to_string())?;
     let output = Command::new("docker-compose")
         .arg("up")
@@ -58,5 +77,31 @@ pub fn start_docker_compose(path: &Path) -> Result<(), String> {
         .lines()
         .filter_map(|line| line.ok())
         .for_each(|line| println!("{}", line));
+    Ok(())
+}
+
+pub fn get_default_port(db: DB) -> String {
+    let port = match db {
+        DB::MONGO => "27017",
+        DB::POSTGRES => "5432",
+    };
+    port.to_string()
+}
+
+pub fn delete_db(root: &Path, db_name: String) -> Result<(), String> {
+    delete_container(db_name.clone());
+    remove_dir_all(root.join("existing_dbs").join(db_name))
+        .map_err(|_| "Could not delete DB".to_string())
+}
+
+pub fn delete_container(db_name: String) -> Result<(), String> {
+    Command::new("docker")
+        .args(vec!["stop", &db_name])
+        .spawn()
+        .map_err(|_| "Could not stop container")?;
+    Command::new("docker")
+        .args(vec!["rm", &db_name])
+        .spawn()
+        .map_err(|_| "Could not delete container")?;
     Ok(())
 }

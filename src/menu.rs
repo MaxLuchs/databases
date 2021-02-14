@@ -4,7 +4,7 @@ use self::terminal_menu::{
     activate, button, get_submenu, menu, scroll, selection_value, submenu, wait_for_exit,
 };
 use crate::db::{get_existing_dbs, DB};
-use crate::menu::UISelection::{CreateDB, StartDB};
+use crate::menu::UISelection::{CreateDB, DeleteDB, StartDB};
 use crate::utils::get_root;
 use std::io::stdin;
 
@@ -12,11 +12,13 @@ use std::io::stdin;
 pub enum UISelection {
     CreateDB { db_type: DB },
     StartDB { db_name: String },
+    DeleteDB { db_name: String },
 }
 
 struct UISelectionInput {
     db_existing: String,
     db_new: String,
+    db_delete: String,
 }
 
 impl From<UISelectionInput> for Option<UISelection> {
@@ -24,13 +26,17 @@ impl From<UISelectionInput> for Option<UISelection> {
         let UISelectionInput {
             db_existing,
             db_new,
+            db_delete,
         } = input;
-        match (db_existing.as_ref(), db_new.as_ref()) {
-            ("none", "mongodb") => Some(CreateDB { db_type: DB::MONGO }),
-            ("none", "postgres") => Some(CreateDB {
+        match (db_existing.as_ref(), db_new.as_ref(), db_delete.as_ref()) {
+            ("none", "mongodb", "none") => Some(CreateDB { db_type: DB::MONGO }),
+            ("none", "postgres", "none") => Some(CreateDB {
                 db_type: DB::POSTGRES,
             }),
-            (db_name, "none") if !db_name.eq("none") => Some(StartDB {
+            (db_name, "none", "none") if !db_name.eq("none") => Some(StartDB {
+                db_name: db_name.to_string(),
+            }),
+            ("none", "none", db_name) => Some(DeleteDB {
                 db_name: db_name.to_string(),
             }),
             _ => None,
@@ -63,6 +69,17 @@ pub fn show_menu() -> Result<Option<UISelection>, String> {
                 button("Exit"),
             ],
         ),
+        submenu(
+            "Delete a DB",
+            vec![
+                scroll("Select DB", {
+                    let mut options = get_existing_dbs(&root);
+                    options.insert(0, "none".to_string());
+                    options
+                }),
+                button("Exit"),
+            ],
+        ),
         button("Exit"),
     ]);
     activate(&menu);
@@ -72,9 +89,12 @@ pub fn show_menu() -> Result<Option<UISelection>, String> {
     let new_menu = get_submenu(&menu, "Create new DB");
     let db_existing = selection_value(&existing_menu, "Select DB");
     let db_new = selection_value(&new_menu, "Select DB-Type");
+    let delete_menu = get_submenu(&menu, "Delete a DB");
+    let db_delete = selection_value(&delete_menu, "Select DB");
     let ui_selection: Option<UISelection> = (UISelectionInput {
         db_new,
         db_existing,
+        db_delete,
     })
     .into();
 
