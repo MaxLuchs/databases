@@ -1,7 +1,7 @@
 version: '3.4'
 services:
    database:
-      image: "postgres" # use latest official postgres version
+      image: "postgres:latest" # use latest official postgres version
       container_name: ${DB_NAME}
       ports:
          - ${DB_PORT}:5432
