@@ -41,6 +41,9 @@ impl From<UISelectionInput> for Option<UISelection> {
             db_stop.as_ref(),
         ) {
             ("none", "mongodb", "none", "none") => Some(CreateDB { db_type: DB::MONGO }),
+            ("none", "sqlite3", "none", "none") => Some(CreateDB {
+                db_type: DB::SQLITE3,
+            }),
             ("none", "postgres", "none", "none") => Some(CreateDB {
                 db_type: DB::POSTGRES,
             }),
@@ -76,7 +79,7 @@ pub fn show_menu(root: &Path) -> Result<Option<UISelection>> {
             "Create new DB",
             vec![
                 scroll("Select DB-Type", {
-                    let mut options = vec!["mongodb", "postgres"];
+                    let mut options = vec!["mongodb", "postgres", "sqlite3"];
                     options.insert(0, "none");
                     options
                 }),

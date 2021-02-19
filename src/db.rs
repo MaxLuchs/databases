@@ -10,6 +10,7 @@ use std::process::Command;
 pub enum DB {
     MONGO,
     POSTGRES,
+    SQLITE3,
 }
 
 pub fn get_existing_dbs(root: &Path) -> Result<Vec<String>> {
@@ -60,6 +61,7 @@ pub fn create_db(root: &Path, name: String, db: DB) -> Result<()> {
     let src_path = match db {
         DB::MONGO => root.join("mongo"),
         DB::POSTGRES => root.join("postgres"),
+        DB::SQLITE3 => root.join("sqlite3"),
     };
     println!(
         "Initialising new db folder {:?} by db sample folder {:?}",
@@ -67,6 +69,31 @@ pub fn create_db(root: &Path, name: String, db: DB) -> Result<()> {
     );
     copy_dir_all(src_path, &target_path)?;
     Ok(())
+}
+
+pub fn start_sqlite3_db(root: &Path, db_name: String) -> Result<()> {
+    set_current_dir(root.join(&"existing_dbs"))?;
+    let output = Command::new("sqlite3").arg(&db_name).output()?;
+    let (stdout, stderr) = (
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    if output.status.success() {
+        println!(
+            "Sqlite3-DB '{db_name}' successfully created: '{stdout}'",
+            db_name = db_name,
+            stdout = stdout
+        );
+        return Ok(());
+    } else {
+        let err_msg = format!(
+            "Error could not create Sqlite3-DB '{db_name}': {stderr}",
+            db_name = db_name,
+            stderr = stderr
+        );
+        println!("{}", &err_msg);
+        return Err(eyre!(err_msg.clone()));
+    }
 }
 
 pub fn start_docker_compose(path: &Path) -> Result<()> {
@@ -89,6 +116,7 @@ pub fn get_default_port(db: DB) -> String {
     let port = match db {
         DB::MONGO => "27017",
         DB::POSTGRES => "5432",
+        DB::SQLITE3 => "",
     };
     port.to_string()
 }

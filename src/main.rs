@@ -1,6 +1,6 @@
 use databases::db::{
     create_db, create_env_file, delete_container, delete_db, get_default_port,
-    start_docker_compose, stop_db,
+    start_docker_compose, start_sqlite3_db, stop_db, DB,
 };
 use databases::menu::{show_menu, UISelection};
 use eyre::*;
@@ -28,6 +28,18 @@ pub fn main() -> Result<()> {
     //println!("user input : {:?}", &user_input);
     if let Some(result) = user_input {
         match result {
+            UISelection::StartDB { db_name } => {
+                if root
+                    .join("existing_dbs")
+                    .join(&db_name)
+                    .join(".sqlite3")
+                    .exists()
+                {
+                    start_sqlite3_db(&root, db_name.clone())?;
+                } else {
+                    start_docker_compose(&root.join("existing_dbs").join(&db_name))?;
+                }
+            }
             UISelection::CreateDB { db_type } => {
                 let mut editor = Editor::<()>::new();
 
@@ -68,10 +80,11 @@ pub fn main() -> Result<()> {
 
                 create_env_file(&root, new_user, new_password, new_db_name.clone(), new_port)?;
                 delete_container(new_db_name.clone())?;
-                start_docker_compose(&root.join("existing_dbs").join(&new_db_name))?;
-            }
-            UISelection::StartDB { db_name } => {
-                start_docker_compose(&root.join("existing_dbs").join(&db_name))?;
+                if db_type == DB::SQLITE3 {
+                    start_sqlite3_db(&root, new_db_name.clone())?;
+                } else {
+                    start_docker_compose(&root.join("existing_dbs").join(&new_db_name))?;
+                }
             }
             UISelection::DeleteDB { db_name } => {
                 delete_db(&root, db_name.clone()).map(|_| println!("DB {} deleted!", &db_name))?;
