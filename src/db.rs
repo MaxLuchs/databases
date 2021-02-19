@@ -18,6 +18,7 @@ pub fn get_existing_dbs(root: &Path) -> Result<Vec<String>> {
     let results = folders
         .iter()
         .filter(|p| p.is_dir())
+        .filter(|p| !p.join(".sqlite3").exists())
         .map(|p| {
             p.file_name()
                 .and_then(|name| name.to_str())
@@ -71,16 +72,18 @@ pub fn create_db(root: &Path, name: String, db: DB) -> Result<()> {
     Ok(())
 }
 
-pub fn start_sqlite3_db(root: &Path, db_name: String) -> Result<()> {
-    set_current_dir(root.join(&"existing_dbs"))?;
-    let output = Command::new("sqlite3").arg(&db_name).output()?;
+pub fn create_sqlite3_db(root: &Path, db_name: String) -> Result<()> {
+    set_current_dir(root.join(&"existing_dbs").join(&db_name))?;
+    let output = Command::new("touch")
+        .arg(format!("{db_name}.db", db_name = db_name.clone()))
+        .output()?;
     let (stdout, stderr) = (
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
     if output.status.success() {
         println!(
-            "Sqlite3-DB '{db_name}' successfully created: '{stdout}'",
+            "Sqlite3-DB '{db_name}' successfully created. {stdout}",
             db_name = db_name,
             stdout = stdout
         );

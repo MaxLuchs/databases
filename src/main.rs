@@ -1,6 +1,6 @@
 use databases::db::{
-    create_db, create_env_file, delete_container, delete_db, get_default_port,
-    start_docker_compose, start_sqlite3_db, stop_db, DB,
+    create_db, create_env_file, create_sqlite3_db, delete_container, delete_db, get_default_port,
+    start_docker_compose, stop_db, DB,
 };
 use databases::menu::{show_menu, UISelection};
 use eyre::*;
@@ -29,15 +29,16 @@ pub fn main() -> Result<()> {
     if let Some(result) = user_input {
         match result {
             UISelection::StartDB { db_name } => {
-                if root
+                if !root
                     .join("existing_dbs")
                     .join(&db_name)
                     .join(".sqlite3")
                     .exists()
                 {
-                    start_sqlite3_db(&root, db_name.clone())?;
-                } else {
                     start_docker_compose(&root.join("existing_dbs").join(&db_name))?;
+                } else {
+                    println!("Sqlite3-DB does not need to be started!");
+                    return Err(eyre!("Sqlite3-DB does not need to be started!"));
                 }
             }
             UISelection::CreateDB { db_type } => {
@@ -83,7 +84,7 @@ pub fn main() -> Result<()> {
                     delete_container(new_db_name.clone())?;
                     start_docker_compose(&root.join("existing_dbs").join(&new_db_name))?;
                 } else {
-                    start_sqlite3_db(&root, new_db_name.clone())?;
+                    create_sqlite3_db(&root, new_db_name.clone())?;
                 }
             }
             UISelection::DeleteDB { db_name } => {
