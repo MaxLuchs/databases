@@ -48,42 +48,42 @@ pub fn main() -> Result<()> {
                 let new_db_name = db_input.trim().to_string();
                 create_db(&root, new_db_name.clone(), db_type).unwrap();
 
-                let default_port = get_default_port(db_type);
-                let message = format!("DB-Port (optional, default: {}) > ", &default_port);
-                let port_input = editor.readline(&message).unwrap();
-                let new_port = if port_input.trim().is_empty() {
-                    default_port
-                } else {
-                    port_input.trim().to_string()
-                };
+                if db_type != DB::SQLITE3 {
+                    let default_port = get_default_port(db_type);
+                    let message = format!("DB-Port (optional, default: {}) > ", &default_port);
+                    let port_input = editor.readline(&message).unwrap();
+                    let new_port = if port_input.trim().is_empty() {
+                        default_port
+                    } else {
+                        port_input.trim().to_string()
+                    };
 
-                let user_input = editor
-                    .readline(&format!(
-                        "User (optional, default: {}) > ",
+                    let user_input = editor
+                        .readline(&format!(
+                            "User (optional, default: {}) > ",
+                            std::env::var("USER").unwrap()
+                        ))
+                        .unwrap();
+                    let new_user = if user_input.trim().is_empty() {
                         std::env::var("USER").unwrap()
-                    ))
-                    .unwrap();
-                let new_user = if user_input.trim().is_empty() {
-                    std::env::var("USER").unwrap()
-                } else {
-                    user_input.trim().to_string()
-                };
+                    } else {
+                        user_input.trim().to_string()
+                    };
 
-                let password_input = editor
-                    .readline("Password (optional, default: test) > ")
-                    .unwrap();
-                let new_password = if password_input.trim().is_empty() {
-                    "test".to_string()
-                } else {
-                    password_input.trim().to_string()
-                };
+                    let password_input = editor
+                        .readline("Password (optional, default: test) > ")
+                        .unwrap();
+                    let new_password = if password_input.trim().is_empty() {
+                        "test".to_string()
+                    } else {
+                        password_input.trim().to_string()
+                    };
 
-                create_env_file(&root, new_user, new_password, new_db_name.clone(), new_port)?;
-                delete_container(new_db_name.clone())?;
-                if db_type == DB::SQLITE3 {
-                    start_sqlite3_db(&root, new_db_name.clone())?;
-                } else {
+                    create_env_file(&root, new_user, new_password, new_db_name.clone(), new_port)?;
+                    delete_container(new_db_name.clone())?;
                     start_docker_compose(&root.join("existing_dbs").join(&new_db_name))?;
+                } else {
+                    start_sqlite3_db(&root, new_db_name.clone())?;
                 }
             }
             UISelection::DeleteDB { db_name } => {
