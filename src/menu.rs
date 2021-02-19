@@ -68,7 +68,7 @@ pub fn show_menu(root: &Path) -> Result<Option<UISelection>> {
             "Start existing DB",
             vec![
                 scroll("Select DB", {
-                    let mut options = get_existing_dbs(&root, false)?;
+                    let mut options = get_existing_dbs(&root, true)?;
                     options.insert(0, "none".to_string());
                     options
                 }),

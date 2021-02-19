@@ -37,8 +37,26 @@ pub fn main() -> Result<()> {
                 {
                     start_docker_compose(&root.join("existing_dbs").join(&db_name))?;
                 } else {
-                    println!("Sqlite3-DB does not need to be started!");
-                    return Err(eyre!("Sqlite3-DB does not need to be started!"));
+                    println!("Sqlite3-DB does not need to be started! Please connect to your SQL3-Lite-Db via this file:");
+                    let db_file = root
+                        .join("existing_dbs")
+                        .join(&db_name)
+                        .join(format!("{}.db", &db_name));
+                    if db_file.exists() {
+                        println!(
+                            "{db_file_path}",
+                            db_file_path = root
+                                .join("existing_dbs")
+                                .join(&db_name)
+                                .join(format!("{}.db", &db_name))
+                                .to_str()
+                                .ok_or(eyre!("DB-File not found!"))?
+                        );
+                        return Ok(());
+                    } else {
+                        println!("{}", "DB-File not found!");
+                        return Err(eyre!("DB-File not found!"));
+                    }
                 }
             }
             UISelection::CreateDB { db_type } => {
