@@ -13,12 +13,17 @@ pub enum DB {
     SQLITE3,
 }
 
-pub fn get_existing_dbs(root: &Path) -> Result<Vec<String>> {
+pub fn get_existing_dbs(root: &Path, display_sqlite_dbs: bool) -> Result<Vec<String>> {
     let folders = list_all_folders(&root.join("existing_dbs").into_boxed_path())?;
     let results = folders
         .iter()
         .filter(|p| p.is_dir())
-        .filter(|p| !p.join(".sqlite3").exists())
+        .filter(|p| {
+            if !display_sqlite_dbs {
+                return !p.join(".sqlite3").exists();
+            }
+            return true;
+        })
         .map(|p| {
             p.file_name()
                 .and_then(|name| name.to_str())
@@ -125,7 +130,14 @@ pub fn get_default_port(db: DB) -> String {
 }
 
 pub fn delete_db(root: &Path, db_name: String) -> Result<()> {
-    delete_container(db_name.clone())?;
+    if !root
+        .join("existing_dbs")
+        .join(&db_name)
+        .join(".sqlite3")
+        .exists()
+    {
+        delete_container(db_name.clone())?;
+    }
     remove_dir_all(root.join("existing_dbs").join(db_name))?;
     Ok(())
 }
@@ -148,7 +160,7 @@ pub fn stop_db(db_name: String) -> Result<()> {
 }
 
 pub fn get_running_dbs(root: &Path) -> Result<Vec<String>> {
-    let db_names = get_existing_dbs(root)?;
+    let db_names = get_existing_dbs(root, false)?;
     let output = Command::new("docker").arg("ps").output()?;
     let result = String::from_utf8_lossy(&output.stdout);
     return Ok(db_names
